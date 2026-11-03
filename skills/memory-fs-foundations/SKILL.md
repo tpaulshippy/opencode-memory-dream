@@ -64,6 +64,11 @@ skills/
 
 Start flat; add subdirs only when a dir exceeds ~20 files [not from talk — repo threshold]. Rename for grep hits, not cleverness.
 
+Harness note: the plugin store itself is a single flat dir (`safeKey`
+flattens `/` to `__`; search/audit read only the top level), so
+`memory/decisions/` subdirs above are a naming convention for
+hand-managed stores until search recurses.
+
 ## References
 
 - "unreasonably effective" (§5a — CLAUDE.md pattern)

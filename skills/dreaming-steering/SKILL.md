@@ -12,7 +12,7 @@ humans set direction.
 
 ## Steering prompt slot
 
-Every dream run takes a steering prompt. Fill this slot before
+Every dream run takes a steering prompt [not from talk — repo convention: do not fan out without one]. Fill this slot before
 fan-out:
 
 ```md
@@ -35,6 +35,11 @@ dreaming fleet sees only what the requesting user could already see
 - Exclude secrets, credentials, unrelated personal sessions.
 - Record attached transcript IDs in the run log.
 - Never widen access: no cross-user reads to improve signal.
+
+Harness gap (docs-only, NOT enforced by harness): nothing in code stops
+attaching another user's transcripts — `dream_propose` only reads
+`memoryDir`. Enforce the checklist by hand at selection time and keep
+IDs in the run log.
 
 ## Harness-vs-autonomy boundary (transcript §18)
 

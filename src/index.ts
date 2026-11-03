@@ -422,7 +422,7 @@ export default Plugin.define({
       });
       editor.add({
         name: "dream_steer_config",
-        description: "Get or set dream steering config (minPrevalence, maxProposals, autoCommit).",
+        description: "Get or set dream steering config. minPrevalence and maxProposals are effective (read by runDreamPass); autoCommit is stored/validated but reserved — proposals stay human-gated, nothing auto-writes.",
         input: obj({
           action: { type: "string", enum: ["get", "set"], description: "Read or update config." },
           key: str("Config key to set."),
@@ -456,17 +456,19 @@ export default Plugin.define({
         },
       });
     });
-    // Commands below intentionally mirror commands/*.md (same names).
+    // Commands below share names with commands/*.md (same names).
     // The markdown files are model-facing instructions auto-discovered by
     // opencode; the code registrations below are tool-backed execution.
-    // Same names are intentional parity — last-wins is harmless.
+    // Same names are intentional parity of entrypoint, not duplication —
+    // the .md ritual and the code path are different layers (see each
+    // description for what its layer covers).
     // Note: CommandDefinition.execute must return Promise<void> (see
     // node_modules/@opencode/plugin/dist/promise/command.d.ts), so commands
     // persist their summaries to .dreams/latest-summary.md instead of returning text.
     await ctx.command.transform((editor) => {
       editor.add({
         name: "dream-run",
-        description: "Run one dream pass over memory and persist the proposal.",
+        description: "Run one dream pass over memory and persist the proposal. Transcript ingest is manual (model reads them) — full batch ritual lives in commands/dream-run.md.",
         execute: async (input: any) => {
           const topic = extractTopic(input, "recurring");
           const proposal = runDreamPass(topic);
@@ -479,7 +481,7 @@ export default Plugin.define({
       });
       editor.add({
         name: "memory-audit",
-        description: "Audit memory entries: hashes, versions, provenance drift.",
+        description: "Audit memory entries: hashes, versions, provenance drift, staleness. Principle-level coverage review lives in commands/memory-audit.md.",
         execute: async () => {
           runAudit();
         },

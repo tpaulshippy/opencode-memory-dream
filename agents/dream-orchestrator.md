@@ -18,7 +18,9 @@ allocated resources" (transcript §§11, 13).
 2. Select transcripts per dreaming permissions (transcript §17;
    paraphrase): you decide exactly which session transcripts to
    attach, and reviewers see only what the requesting user could
-   already see (same permission set). Log attached IDs; never widen access.
+   already see (same permission set). Docs-only checklist — NOT enforced
+   by the harness (`dream_propose` only reads `memoryDir`; no code stops
+   cross-user reads). Log attached IDs; never widen access.
 3. Spawn one reviewer per transcript (or small cluster) with:
    transcript + tool calls/metadata, memory snapshot excerpt,
    steering prompt, and the question: what pattern repeats and
