@@ -15,24 +15,27 @@ Invokes the dreaming-loop skill. `$ARGUMENTS` = transcript dir
 3. Collect: snapshot the memory store dir of markdown files;
    gather the batch transcripts including tool calls/metadata
    from `$ARGUMENTS` dir.
-4. Confirm steering with the human — "humans tell orchestrator
-   what's important." Do not fan out without a steering prompt.
+4. Confirm steering with the human — humans tell the orchestrator
+   what's important (paraphrase; transcript §13). Do not fan out without a steering prompt.
    Record the steering text verbatim in the run log for audit.
 5. Fan out the sub-agent fleet (one reviewer per transcript),
-   then aggregate with the prevalence threshold (≥2–3 sessions).
-6. Emit proposals in the output contract: diff + example
-   transcripts + prevalence stats + rationale.
+   then aggregate with the prevalence threshold (≥2–3 sessions [not from talk — repo threshold]).
+6. Emit proposals in the output contract: diff + example memory keys
+   (what `dream_propose` returns) + example transcript IDs from
+   provenance (may be empty — limitation) + prevalence stats + rationale.
 7. Human accept/reject gate: apply accepted diffs only, then
    versioned commit referencing proposal IDs. Rejected proposals
    stay logged with reasons — they are signal for the next run.
 
 Dreaming runs "batch and asynchronously... own allocated
-resources" — offline review, parallel arch with in-band fast
-feedback ∥ dreaming breadth. The extra tokens pay back.
+resources" (transcript §§11, 13) — offline review, parallel arch
+with in-band fast feedback ∥ dreaming breadth (transcript §14).
+The extra tokens pay back (paraphrase): one fix prevents the
+fleet-wide repeat.
 
-School analogy reminder: this command is the night shift —
+School analogy reminder (transcript §10): this command is the night shift —
 teachers reviewing the day's homework to update the curriculum.
-Permissions follow dreaming-steering: attach only transcripts
+Permissions follow dreaming-steering (transcript §17): attach only transcripts
 the user could already see, and log every attached ID.
 
 Close every run log with: "Keep thinking, keep learning and

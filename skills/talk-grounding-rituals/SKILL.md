@@ -18,6 +18,8 @@ a quote. If no supporting line exists, write the fallback:
 Attribution rule: speaker labels in auto-transcripts are
 unreliable, so never cite a name from a label. Write
 "the speaker said..." and quote the words, not the attribution.
+Cross-reference any named addressees against the participants list;
+questioners with no reliable label are cited as "a questioner".
 
 ## Audit workflow
 
@@ -45,6 +47,16 @@ Teaching the talk: state the idea in one sentence, play the
 verbatim quote, then explain. Quote first, interpretation
 second — learners must hear "the speaker said..." before
 hearing what you think it means.
+
+## Apply workflow
+
+Apply workflow (how would the speaker tackle <X>?): take a new
+problem <X> the talk never addressed, re-read the relevant talk
+section, then reason out loud about what the speaker would do
+given their stated principles — marking every step beyond the
+transcript [not from talk]. Never present the application as
+something the speaker said; close with what the transcript
+actually covers vs what you inferred.
 
 ## Proactive-citation workflow
 

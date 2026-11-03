@@ -32,9 +32,9 @@ the 4 principles. `$ARGUMENTS` = path to artifact under audit
 | 3 | covered/partial/missing | quote + file ref |
 | 4 | covered/partial/missing | quote + file ref |
 
-Scope note: "This by no means is just specific to coding..."
+Scope note: "This by no means is just specific to coding..." (§15)
 — audit style, tooling, and process coverage too, not just code.
 
 Harness check: "We have enough signal now to know...
-deterministic way" — flag anything counted by hand that the
+deterministic way" (§18) — flag anything counted by hand that the
 harness should compute (hashing, prevalence, versioning).

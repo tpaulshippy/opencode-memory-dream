@@ -5,12 +5,14 @@ description: Use when hardening agent memory for production, multi-agent, or org
 
 # Memory Production Guards
 
-Prototype memory is one agent + one dir. Production is concurrent writers, shared reads, and adversaries. Four principles keep it safe.
+Prototype memory is one agent + one dir. Production is concurrent writers, shared reads, and adversaries. Four principles (transcript §7) keep it safe.
+
+## Production Problems (transcript §6)
 
 ## Production Problems
 
 1. **Concurrent writes.** Two agents edit the same memory; last-write-wins silently drops one update.
-2. **Org-wide corruption.** One bad write propagates to every agent. At org scale this is "pretty disastrous" (§5) — a poisoned deploy note breaks the fleet.
+2. **Org-wide corruption.** One bad write propagates to every agent. At org scale this is "pretty disastrous" (§6) — a poisoned deploy note breaks the fleet.
 3. **Stale / wrong memory.** Procedures rot; a once-correct endpoint becomes a persistent lie.
 4. **Injected memory.** Pasted web content, tickets, or transcripts smuggle instructions into the store.
 
@@ -30,7 +32,7 @@ Every memory record carries `{ id, version, author, created_at, updated_at, sour
 
 ### 2. Hashing / CAS ritual
 
-"When an agent decides that it wants to write an update to a memory, it takes the hash..." (§6). Steps:
+"When an agent decides that it wants to write an update to a memory, it takes the hash..." (§7). Steps:
 
 1. `read` record + record its `hash`.
 2. `draft` the update locally (do not write yet).
@@ -40,7 +42,7 @@ Every memory record carries `{ id, version, author, created_at, updated_at, sour
 
 ### 3. Permission tiers
 
-"You wouldn't want one agent to just decide..." (§6) what the org believes. Enforce:
+"You wouldn't want one agent to just decide..." (§7) what the org believes. Enforce (docs-only guidance — see Harness gap below):
 
 - `org/*` — read-only for agents; human-approved writers only.
 - `team/*` — read for org, write for team leads + curated jobs.
@@ -48,7 +50,7 @@ Every memory record carries `{ id, version, author, created_at, updated_at, sour
 
 ### 4. Portability API
 
-Memory must export/import as plain files + manifest (`memory.jsonl`). Any provider swap preserves `{id, version, content, provenance}`. Test restore monthly.
+Memory must export/import as plain files + manifest (`memory.jsonl`) [not from talk — repo format]. Any provider swap preserves `{id, version, content, provenance}`. Test restore monthly [not from talk — repo cadence].
 
 ## Boundaries
 
@@ -63,12 +65,20 @@ Memory must export/import as plain files + manifest (`memory.jsonl`). Any provid
 |---------------|-----------------------------------------------|-----------------------------------|
 | Versioning    | Every record has version + author + source    | Any unversioned/anonymous record  |
 | Hashing-CAS   | Write path implements 5-step ritual; conflicts logged | Direct overwrite possible   |
-| Permissioning | org/ read-only enforced; writers allowlisted  | Agent can write org/ directly     |
-| Portability   | Export + restore tested <30d, zero loss       | No tested export path             |
+| Permissioning | Writers allowlisted; org/ writes need human review | Agent can write org/ directly |
+| Portability   | Export + restore tested <30d [not from talk — repo cadence], zero loss | No tested export path |
 
 All four must be Pass for org scope. One Fail → demote to team or scratchpad.
 
+## Harness gap
+
+Principles 3 (permission tiers) and 4 (portability export/restore) are
+docs-only guidance here, NOT enforced by the plugin harness: today no
+code stops an agent from writing `org/` directly, and no export/restore
+path exists in `src/index.ts`. Treat the audit above as a human-run
+checklist until the harness enforces it.
+
 ## References
 
-- "When an agent decides that it wants to write an update to a memory, it takes the hash..." (§6 — CAS)
-- "You wouldn't want one agent to just decide..." (§6 — permissioning)
+- "When an agent decides that it wants to write an update to a memory, it takes the hash..." (§7 — CAS)
+- "You wouldn't want one agent to just decide..." (§7 — permissioning)

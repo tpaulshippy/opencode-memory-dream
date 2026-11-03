@@ -10,7 +10,10 @@
   },
   "files": ["src", "skills", "commands", "agents"],
   "dependencies": {
-    "@opencode/plugin": "latest"
+    "@opencode/plugin": "2.2.5"
+  },
+  "scripts": {
+    "build": "tsc"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

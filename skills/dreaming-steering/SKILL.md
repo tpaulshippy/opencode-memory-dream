@@ -5,9 +5,10 @@ description: Configure steering prompts, transcript selection, and harness bound
 
 # Dreaming Steering
 
-Humans steer dreaming, agents do the judging. The talk's rule:
-"humans tell orchestrator what's important" — the orchestrator
-and fleet handle pattern detection; humans set direction.
+Humans steer dreaming, agents do the judging. The talk's rule
+(paraphrase; transcript §13): humans tell the orchestrator what's
+important — the orchestrator and fleet handle pattern detection;
+humans set direction.
 
 ## Steering prompt slot
 
@@ -25,20 +26,20 @@ reports everything and the prevalence threshold fills with noise.
 
 ## Transcript selection (permissions)
 
-Dreaming permissions rule: "you decide exactly which session
-transcripts to attach... same permission set" — the dreaming
-fleet sees only what the requesting user could already see.
-Selection checklist:
+Dreaming permissions rule (transcript §17; paraphrase, not a quote):
+you decide exactly which session transcripts to attach, and the
+dreaming fleet sees only what the requesting user could already see
+(same permission set). Selection checklist:
 
 - Attach only transcripts the user owns or may access.
 - Exclude secrets, credentials, unrelated personal sessions.
 - Record attached transcript IDs in the run log.
 - Never widen access: no cross-user reads to "improve signal."
 
-## Harness-vs-autonomy boundary
+## Harness-vs-autonomy boundary (transcript §18)
 
 The harness owns what is deterministic; agents own judgment.
-"We have enough signal now to know... deterministic way" —
+"We have enough signal now to know... deterministic way" (§18) —
 hashing, versioning, dedup, and audit trails belong in code.
 
 | Harness (deterministic)      | Agents (judgment)              |
@@ -53,7 +54,7 @@ If it needs taste, give it to the fleet.
 
 ## Non-coding scope
 
-"This by no means is just specific to coding..." — dreaming
+"This by no means is just specific to coding..." (§15) — dreaming
 applies to writing style, tool use, planning, review habits,
 any repeated agent behavior. Steer runs beyond code freely.
 
