@@ -1,6 +1,6 @@
 ---
 name: dreaming-loop
-description: Run the batch dreaming ritual over memory store + transcripts. Use when improving memory, MCP tools, or agent behavior from fleet experience.
+description: Use when running the batch dreaming ritual to improve memory, MCP tools, or agent behavior from fleet experience.
 ---
 
 # Dreaming Loop
@@ -22,8 +22,9 @@ it happens when the batch is reviewed together.
 
 Inputs: a memory store dir of markdown files plus a batch of
 session transcripts including tool calls and metadata (transcript §13).
-Gather N transcripts (default 10–20 [not from talk — repo batch size]) with tool call history,
+Gather 10–20 transcripts (up to 50 for large runs) [not from talk — repo batch size] with tool call history,
 timestamps, and outcome labels. Snapshot current memory files.
+Output is capped at maxProposals (default 5, raise via dream_steer_config).
 
 ### 2. Fan out with steering prompt (transcript §13)
 
@@ -36,7 +37,7 @@ what memory/tool change would have helped?
 
 Aggregate findings across the fleet. Apply the prevalence
 threshold: a pattern must appear in ≥2–3 independent sessions
-[not from talk — repo threshold] before it becomes a proposal. One-offs are logged, not promoted.
+(repo convention [not from talk]; harness counts memory-file hits — pass sessionsScanned for session-based accounting) before it becomes a proposal. One-offs are logged, not promoted.
 
 ### 4. Emit proposals in output contract
 

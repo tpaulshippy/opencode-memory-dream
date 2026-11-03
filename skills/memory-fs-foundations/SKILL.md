@@ -1,6 +1,6 @@
 ---
 name: memory-fs-foundations
-description: Use when bootstripping persistent agent memory from scratch, choosing a memory store, or converting tribal knowledge into reusable skills.
+description: Use when bootstrapping persistent agent memory from scratch, choosing a memory store, or converting tribal knowledge into reusable skills.
 ---
 
 # Memory FS Foundations
@@ -36,7 +36,7 @@ description: Use when deploying the API to staging or production.
 ...
 ```
 
-Loader reads `name` + `description` only (~10 lines), then loads full body iff relevant. Keep `description` starting with "Use when".
+Loader reads `name` + `description` only (~10 lines) [not from talk — repo estimate], then loads full body iff relevant. Keep `description` starting with "Use when".
 
 ## Boundaries
 
@@ -62,7 +62,7 @@ skills/
   deploy-procedure/SKILL.md
 ```
 
-Start flat; add subdirs only when a dir exceeds ~20 files. Rename for grep hits, not cleverness.
+Start flat; add subdirs only when a dir exceeds ~20 files [not from talk — repo threshold]. Rename for grep hits, not cleverness.
 
 ## References
 

@@ -58,6 +58,12 @@ transcript [not from talk]. Never present the application as
 something the speaker said; close with what the transcript
 actually covers vs what you inferred.
 
+## Sources
+
+Transcript §§ in this repo resolve against the upstream talk repo files —
+https://github.com/AINativeDev/aidevcon-2026-ldn/tree/main/talk-lamis-context-engineering-dreaming:
+`transcript.md` (§§ + line refs), `outline.md` (section map), `quotes.md` (anchor lines).
+
 ## Proactive-citation workflow
 
 When answering questions the talk covers: lead with the

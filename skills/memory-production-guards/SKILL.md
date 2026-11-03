@@ -21,14 +21,14 @@ Prototype memory is one agent + one dir. Production is concurrent writers, share
 1. **Inventory writers and readers.** List every agent/job that reads or writes each memory dir. No unknown writers.
 2. **Apply the 4 principles below.** Versioning, hashing-CAS, permissioning, portability — in that order.
 3. **Run the audit checklist.** Every principle must pass before promoting memory to org scope.
-4. **Quarantine on failure.** On any FAIL, demote the memory to scratchpad, fix, re-audit. Never patch org memory in place.
+4. **Quarantine on failure.** [not from talk — repo workflow] On any FAIL, demote the memory to `agent-scratchpad/`, fix, re-audit. Never patch org memory in place.
 5. **Schedule hygiene.** Pair with dreaming curation (`inband-vs-outband`): dedupe, expire, and verify on a cadence.
 
 ## The 4 Principles
 
 ### 1. Versioning + provenance
 
-Every memory record carries `{ id, version, author, created_at, updated_at, source, confidence }`. History is append-only; updates bump `version`, never rewrite.
+Every memory record carries `{ id, version, author, created_at, updated_at, sourceTranscriptIds }` where `sourceTranscriptIds` is an array defaulting to `[]` (record via `memory_write_cas` `sourceTranscriptIds` input; no `source`/`confidence` scalar). History is append-only; updates bump `version`, never rewrite.
 
 ### 2. Hashing / CAS ritual
 
@@ -42,7 +42,7 @@ Every memory record carries `{ id, version, author, created_at, updated_at, sour
 
 ### 3. Permission tiers
 
-"You wouldn't want one agent to just decide..." (§7) what the org believes. Enforce (docs-only guidance — see Harness gap below):
+"You wouldn't want one agent to just decide..." (§7) what the org believes. Enforce (docs-only guidance — see Harness gap below). Tier names and paths are a repo convention [not from talk]:
 
 - `org/*` — read-only for agents; human-approved writers only.
 - `team/*` — read for org, write for team leads + curated jobs.
@@ -55,7 +55,7 @@ Memory must export/import as plain files + manifest (`memory.jsonl`) [not from t
 ## Boundaries
 
 - Do NOT grant org-write to autonomous agents, demos, or eval harnesses.
-- Do NOT skip CAS "because conflicts are rare" — rarity is what makes corruption total.
+- Do NOT skip CAS because conflicts are rare — rarity is what makes corruption total.
 - Do NOT store credentials or customer PII even with versioning; reference external secrets.
 - Escalate incident response beyond this skill; this skill prevents, it does not forensically remediate.
 
@@ -63,7 +63,7 @@ Memory must export/import as plain files + manifest (`memory.jsonl`) [not from t
 
 | Principle     | Pass                                          | Fail                              |
 |---------------|-----------------------------------------------|-----------------------------------|
-| Versioning    | Every record has version + author + source    | Any unversioned/anonymous record  |
+| Versioning    | Every record has version + author + sourceTranscriptIds    | Any unversioned/anonymous record  |
 | Hashing-CAS   | Write path implements 5-step ritual; conflicts logged | Direct overwrite possible   |
 | Permissioning | Writers allowlisted; org/ writes need human review | Agent can write org/ directly |
 | Portability   | Export + restore tested <30d [not from talk — repo cadence], zero loss | No tested export path |

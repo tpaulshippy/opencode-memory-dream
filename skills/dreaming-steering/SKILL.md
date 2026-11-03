@@ -1,6 +1,6 @@
 ---
 name: dreaming-steering
-description: Configure steering prompts, transcript selection, and harness boundaries for dreaming. Use when scoping a dream run or setting fleet permissions.
+description: Use when configuring steering prompts, transcript selection, and harness boundaries for dreaming.
 ---
 
 # Dreaming Steering
@@ -34,7 +34,7 @@ dreaming fleet sees only what the requesting user could already see
 - Attach only transcripts the user owns or may access.
 - Exclude secrets, credentials, unrelated personal sessions.
 - Record attached transcript IDs in the run log.
-- Never widen access: no cross-user reads to "improve signal."
+- Never widen access: no cross-user reads to improve signal.
 
 ## Harness-vs-autonomy boundary (transcript §18)
 
@@ -61,5 +61,11 @@ any repeated agent behavior. Steer runs beyond code freely.
 ## Cadence guidance [not from talk]
 
 Suggested, not from the talk: nightly or weekly dream runs
-over 10–50 transcripts; ad-hoc runs after incidents or big
+over 10–20 transcripts (up to 50 for large runs); ad-hoc runs after incidents or big
 tool changes. Adjust N to keep review load under ~30 min.
+Output is capped at maxProposals (default 5, raise via dream_steer_config).
+
+## Enterprise + durability pointers (talk-sourced, not implemented here)
+
+- Enterprise API (transcript §16 Q&A): enterprises are pointed at the Claude Managed Agents memory/dreaming API (talk-sourced pointer — not something this repo implements).
+- Durability (transcript §18): a questioner raised durability; this repo covers format portability (plain files + manifest), not backup/restore guarantees — back up MEMORY_DIR.

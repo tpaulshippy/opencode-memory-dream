@@ -20,11 +20,11 @@ In-band learning is the agent writing memory while serving you. Dreaming is cura
 
 - **Own budget.** Separate tokens/compute; zero user-facing latency.
 - **Fleet visibility.** Reads transcripts across sessions and agents to find repeats.
-- **Hygiene mandate.** "multiplying the intelligence" (§8) comes from compounding clean context: merge dupes, correct errors, expire rot, promote durable patterns to skills.
+- **Hygiene mandate.** Multiplying the intelligence (§4) comes from compounding clean context: merge dupes, correct errors, expire rot, promote durable patterns to skills.
 
 ## Workflow
 
-1. **Triage the candidate learning.** Capture it in-band as a raw note (`scratchpad/YYYY-MM-DD-<topic>.md`, ≤10 lines) [not from talk — repo path/length convention]. Do not curate live.
+1. **Triage the candidate learning.** Capture it in-band as a raw note (`agent-scratchpad/YYYY-MM-DD-<topic>.md`, ≤10 lines) [not from talk — repo path/length convention]. Do not curate live.
 2. **Apply the decision rule below.** Label each note: STAYS-IN-BAND or MOVES-TO-DREAMING [not from talk — repo triage convention].
 3. **Batch for dreaming.** Dreaming input contract: "The agent will additionally give you examples of transcripts..." (§13) — bundle raw notes + source transcript excerpts.
 4. **Dream async.** Run dedupe/merge/verify/promote with fleet context. Example catch: "Everybody's using too many em dashes..." (§12) becomes one style skill, not fifty notes.
@@ -35,7 +35,7 @@ In-band learning is the agent writing memory while serving you. Dreaming is cura
 - **STAYS in-band:** session-local facts (file paths, current branch, user prefs stated today), scratch notes, anything needed within this session only.
 - **MOVES to dreaming:** repeats across sessions, corrections ("never do X again"), procedural knowledge, style norms, anything 2+ agents should share, anything contradicting existing memory.
 
-Heuristic: if it helps only this answer → in-band. If it prevents next week's repeat — "do the simple thing that works" (§4) and queue it for dreaming.
+Heuristic: if it helps only this answer → in-band. If it prevents next week's repeat — do the simple thing that works (§5) and queue it for dreaming.
 
 ## Latency Rule of Thumb
 
@@ -45,7 +45,7 @@ Heuristic: if it helps only this answer → in-band. If it prevents next week's 
 
 ## Worked Example
 
-- In-band note: "User prefers pnpm over npm in this repo." Stays session-local until confirmed twice.
+- In-band note: User prefers pnpm over npm in this repo. Stays session-local until confirmed twice.
 - Dreaming promotion: third session repeats the pnpm correction → dreaming merges three transcripts into `skills/js-package-manager/SKILL.md` with provenance links.
 - Expiry: nodes untouched for 90 days with no fleet hits get archived, not deleted [not from talk — repo threshold] — "Keep thinking, keep learning and keep dreaming." (transcript closing).
 

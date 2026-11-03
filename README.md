@@ -8,20 +8,31 @@ Tagline from the talk's closing: *"Keep thinking, keep learning and keep dreamin
 
 ## Install
 
+**Warning: never install the bare npm name `opencode-memory-dream` — that name belongs to an unrelated project (cj06412). This repo is not yet published to npm.**
+
 ```jsonc
 // opencode.jsonc
 { "$schema": "https://opencode.ai/config.json",
-  "plugins": ["opencode-memory-dream"] }
+  "plugins": ["github:tpaulshippy/opencode-memory-dream"] }
+```
+
+Local-path alternative (no registry needed):
+
+```jsonc
+// opencode.jsonc
+{ "$schema": "https://opencode.ai/config.json",
+  "plugins": ["/path/opencode-memory-dream"] }
 ```
 
 Local dev:
 
 ```sh
 git clone https://github.com/tpaulshippy/opencode-memory-dream
-# project-local:
-cp -r opencode-memory-dream/.opencode/plugins/memory-dream /your/project/.opencode/plugins/
-# or reference explicitly:
-# { "plugins": ["./vendor/opencode-memory-dream"] }
+# project-local: symlink the cloned repo ROOT (it contains src/, skills/, commands/, agents/)
+# into your project's plugin dir:
+ln -s /path/opencode-memory-dream /your/project/.opencode/plugins/memory-dream
+# or reference the root path explicitly instead of symlinking:
+# { "plugins": ["/path/opencode-memory-dream"] }
 ```
 
 Skills-only use: copy/symlink `skills/*/` into `.opencode/skills/`, `~/.config/opencode/skills/`, or serve over HTTP per the opencode skills catalog (`index.json`).
@@ -63,30 +74,31 @@ Deterministic parts live in the harness (`src/index.ts`: sha256 CAS, append-only
 | 9 | **In-band limits** — split-focus optimization, latency, *"same mistake over sessions"* single-visibility | `inband-vs-outband` Limits § | All three limits + staleness enumerated with triage workflow |
 | 10 | **Out-of-band curation** — own budget, fleet visibility, hygiene | `inband-vs-outband` Curation §, `dreaming-loop` | Separate allocation, cross-session joins, dedupe/expire/promote |
 | 11 | **Production problems** — concurrent writes, org-wide corruption (*"pretty disastrous"*), stale/wrong/injected | `memory-production-guards` Problems § | All four enumerated; quarantine-on-failure rule |
-| 12 | **Principle 1: Versioning + provenance** | `memory-production-guards` §1, `src/index.ts` `commitEntry` | `{id, version, author, source}` schema; append-only `.versions/*.json` + `.prov.json`, drift detection in audit |
+| 12 | **Principle 1: Versioning + provenance** | `memory-production-guards` §1, `src/index.ts` `commitEntry` | Provenance stores `sourceTranscriptIds` (array, defaults `[]`) — record via `memory_write_cas` `sourceTranscriptIds` input; no `source`/`confidence` scalar. Append-only `.versions/*.json` + `.prov.json`, drift detection in audit |
 | 13 | **Principle 2: Hashing/CAS concurrency** — *"When an agent decides… it takes the hash…"* | `memory-production-guards` §2, `memory_write_cas` | 5-step ritual (read hash → draft → re-hash → commit or abort+re-draft); tool returns `ABORT` on mismatch |
 | 14 | **Principle 3: Permissioning** — *"You wouldn't want one agent to just decide…"* | `memory-production-guards` §3, `dreaming-steering` selection (docs-only guidance — NOT enforced by the harness; agents can write `org/` directly today) | `org/*` read-only → `team/*` → `agent-scratchpad/*` R/W as a human-run checklist; promotion requires review |
 | 15 | **Principle 4: Portability** | `memory-production-guards` §4 (docs-only guidance — no export/restore path exists in code) | Plain files + `memory.jsonl` manifest [not from talk]; monthly restore test [not from talk] is aspirational until the harness implements it |
 | 16 | **Benefits when in place** — accuracy, cost/latency, freed capacity | `dreaming-loop` (parallel-arch), `inband-vs-outband` | One-shot tasks, fewer retries; no invented numbers (talk gives none — marked as such) |
 | 17 | **Dreaming definition** — *"batch and asynchronously… own allocated resources"* | `dreaming-loop` head, `inband-vs-outband`, `dream-orchestrator` | Quoted in all three; offline night-shift framing |
 | 18 | **School analogy** — *"Think about a school…"* | `dreaming-loop`, `dream-run.md`, `dream-orchestrator.md` | Students=sessions, teachers=fleet, head-teacher=orchestrator, curriculum=memory |
-| 19 | **Dreaming inputs** — memory snapshot + transcripts incl tool calls/metadata | `dreaming-loop` step 1, `dream-run.md` step 3 | Collect N=10–20 transcripts [not from talk — repo batch size] with tool history + timestamps + outcomes |
-| 20 | **Dreaming process** — fan out → aggregate → prevalence threshold → proposals | `dreaming-loop` steps 2–4, `dream-orchestrator.md` | One reviewer per transcript, cluster, ≥2–3 sessions to promote [not from talk — repo convention] |
-| 21 | **Steering** — humans tell orchestrator what's important (paraphrase, not a talk quote) | `dreaming-steering` slot, `dream-run.md` step 4 | Mandatory steering prompt (`Focus on / Ignore / Priority`) is a repo convention [not from talk], recorded verbatim; `steer.json` currently write-only — `runDreamPass` uses compiled-in defaults and does not read it yet |
+| 19 | **Dreaming inputs** — memory snapshot + transcripts incl tool calls/metadata | `dreaming-loop` step 1, `dream-run.md` step 3 | Collect 10–20 transcripts (up to 50 for large runs) [not from talk — repo batch size] with tool history; output capped at maxProposals (default 5, raise via dream_steer_config). Harness gap: current `dream_propose` searches memory files, does not ingest transcripts; transcript ingestion is manual (model reads them) until a future transcript-index input lands |
+| 20 | **Dreaming process** — fan out → aggregate → prevalence threshold → proposals | `dreaming-loop` steps 2–4, `dream-orchestrator.md` | One reviewer per transcript, cluster, ≥2–3 independent sessions to promote (repo convention [not from talk]; harness counts memory-file hits — pass sessionsScanned for session-based accounting) |
+| 21 | **Steering** — humans tell orchestrator what's important (paraphrase, not a talk quote) | `dreaming-steering` slot, `dream-run.md` step 4 | Mandatory steering prompt (`Focus on / Ignore / Priority`) is a repo convention [not from talk], recorded verbatim in the run log; steer IS wired — `runDreamPass` reads `readSteer()` and `dream_steer_config` get/set is effective (`minPrevalence`, `maxProposals`, `autoCommit`) |
 | 22 | **Output contract** — *"examples of transcripts… stats on how prevalent…"* + rationale | `dreaming-loop` template, `dream_propose` tool | `{diff, exampleMemoryKeys, exampleTranscriptIds (from provenance; may be empty — limitation), prevalence {hits, scanned}, rationale}` — `exampleMemoryKeys` is what the tool returns today (it searches memory, not transcripts); true transcript IDs need provenance |
 | 23 | **Example 1: missing curriculum (geography)** | `dreaming-loop` canonical #1 | Fleet asks for facts that should be memory → add curriculum page |
 | 24 | **Example 2: systematic misconfiguration (radians vs degrees)** | `dreaming-loop` canonical #2 | Tool-call metadata reveals misuse → fix tool config, not prompts |
 | 25 | **Example 3: fleet-wide style (em dashes)** — *"Everybody's using too many em dashes…"* | `dreaming-loop` canonical #3, `inband-vs-outband` | One shared style rule instead of per-session corrections |
 | 26 | **Parallel architecture** — in-band ∥ dreaming, tokens pay back | `dreaming-loop` footer, `dream-orchestrator.md` | Fast feedback ∥ breadth; fix-once-prevent-fleetwise |
 | 27 | **Scope beyond code** — *"This by no means is just specific to coding…"* | `dreaming-steering`, `memory-audit.md`, `inband-vs-outband` | Writing, planning, review, support — same split |
-| 28 | **Dreaming permissions** — *"you decide exactly which session transcripts to attach…"* | `dreaming-steering` checklist, `dream-orchestrator.md` | Same-permission-set attach only; IDs logged; no cross-user reads |
+| 28 | **Dreaming permissions** — *"you decide exactly which session transcripts to attach…"* | `dreaming-steering` checklist, `dream-orchestrator.md` | Same-permission-set attach only; IDs logged; no cross-user reads (docs-only, NOT enforced by harness) |
 | 29 | **Harness-vs-autonomy boundary** — *"We have enough signal now to know… deterministic way"* | `dreaming-steering` table, `src/index.ts` | Hashing/versioning/counting/gating in code; pattern judgment + wording to agents |
 | 30 | **Talk's own SKILL.md rituals** — grounding (outline→section→verbatim quote+lines), audit, draft, teach, apply, proactive surfacing | `talk-grounding-rituals`, `memory-audit.md` | All six workflows ported; `"talk doesn't address this"` fallback; *"the speaker said…"* attribution (labels unreliable; named addressees checked against participants list, questioners cited as "a questioner"); extras marked `[not from talk]` |
-| 31 | **Explicitly NOT in the talk** (outline open questions: dir schema, benchmarks, adversarial detail, eval/RLHF, DB-vs-markdown rule, cadence) | `dreaming-steering` cadence §, this README, per-claim markers | Anything beyond transcript marked `[not from talk]` — marked so far: <100-line `CLAUDE.md`, ~20-line/>2-session promote rule, ~200-file `INDEX.md` gate, N=10–20 batch, ≥2–3 prevalence, ≤30s/≤500-token in-band budget, 90-day archive, <30d restore test, `memory.jsonl` manifest, STAYS/MOVES triage, `scratchpad/YYYY-MM-DD` path, nightly-janitor phrasing, mandatory steering, permission tiers + portability enforcement; no invented benchmarks; cadence is suggestion-only |
+| 31 | **Explicitly NOT in the talk** (outline open questions: dir schema, benchmarks, adversarial detail, eval/RLHF, DB-vs-markdown rule, cadence) | `dreaming-steering` cadence §, this README, per-claim markers | Anything beyond transcript marked `[not from talk]` — marked so far: <100-line `CLAUDE.md`, ~20-line/>2-session promote rule, ~20-file subdir rule [not from talk — repo threshold], ~200-file `INDEX.md` gate, N=10–20 batch, ≥2–3 prevalence (repo convention [not from talk]; harness counts memory-file hits — pass sessionsScanned for session-based accounting), ≤30s/≤500-token in-band budget, 90-day archive, <30d restore test, `memory.jsonl` manifest, STAYS/MOVES triage, `agent-scratchpad/YYYY-MM-DD` path, nightly-janitor phrasing, mandatory steering, permission tiers (`team/` name + org/team/scratchpad paths [not from talk — repo convention]) + portability enforcement; no invented benchmarks; cadence is suggestion-only |
+| 32 | **Enterprise API + durability pointers (talk-sourced, not implemented here)** | `dreaming-steering` enterprise § | Talk §16 Q&A points enterprises at the Claude Managed Agents memory/dreaming API (talk-sourced pointer); talk §18 questioner raised durability — this repo covers format portability, not backup/restore guarantees, so back up MEMORY_DIR |
 
 ## Verbatim quote index
 
-All quotes shortened to anchors; full lines live in the talk's `quotes.md` / `transcript.md` §§ cited per skill. This repo never paraphrases inside quotation marks (see `talk-grounding-rituals`).
+All quotes shortened to anchors; transcript §§ below resolve against the upstream talk repo files — https://github.com/AINativeDev/aidevcon-2026-ldn/tree/main/talk-lamis-context-engineering-dreaming (`transcript.md` = §§ + line refs, `outline.md` = section map, `quotes.md` = anchor lines). Full lines live in the talk's `quotes.md` / `transcript.md` §§ cited per skill. This repo never paraphrases inside quotation marks (see `talk-grounding-rituals`).
 
 ## Development
 

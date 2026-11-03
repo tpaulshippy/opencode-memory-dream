@@ -13,13 +13,17 @@ Invokes the dreaming-loop skill. `$ARGUMENTS` = transcript dir
 2. Load the `dreaming-steering` skill for the steering slot
    and permission-scoped transcript selection.
 3. Collect: snapshot the memory store dir of markdown files;
-   gather the batch transcripts including tool calls/metadata
-   from `$ARGUMENTS` dir.
+   gather 10–20 transcripts (up to 50 for large runs) including tool calls/metadata
+   (no timestamps/outcomes here — those live in dreaming-loop step 1)
+   from `$ARGUMENTS` dir. Output is capped at maxProposals (default 5,
+   raise via dream_steer_config). Harness gap: current `dream_propose`
+   searches memory files, does not ingest transcripts; transcript ingestion
+   is manual (model reads them) until a future transcript-index input lands.
 4. Confirm steering with the human — humans tell the orchestrator
    what's important (paraphrase; transcript §13). Do not fan out without a steering prompt.
    Record the steering text verbatim in the run log for audit.
 5. Fan out the sub-agent fleet (one reviewer per transcript),
-   then aggregate with the prevalence threshold (≥2–3 sessions [not from talk — repo threshold]).
+   then aggregate with the prevalence threshold (≥2–3 independent sessions (repo convention [not from talk]; harness counts memory-file hits — pass sessionsScanned for session-based accounting)).
 6. Emit proposals in the output contract: diff + example memory keys
    (what `dream_propose` returns) + example transcript IDs from
    provenance (may be empty — limitation) + prevalence stats + rationale.

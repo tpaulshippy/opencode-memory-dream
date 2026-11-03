@@ -4,6 +4,9 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync,
 import { dirname, join, resolve, sep } from "node:path";
 
 const PLUGIN_ID = "memory-dream";
+// DEFAULT_STEER: maxProposals caps the number of output items (proposals /
+// searched entries surfaced per pass), not the size of the transcript batch
+// being dreamed over — transcript batches may be much larger.
 const DEFAULT_STEER = { minPrevalence: 2, maxProposals: 5, autoCommit: false };
 
 /**
@@ -99,7 +102,7 @@ function readProvenance(key: string): Provenance | null {
 }
 
 /** Append-only versioned write: snapshot to .versions/, update entry + provenance sidecar. */
-function commitEntry(key: string, content: string, author: string): Provenance {
+function commitEntry(key: string, content: string, author: string, opts?: { sourceTranscriptIds?: string[] }): Provenance {
   mkdirSync(memoryDir(), { recursive: true });
   mkdirSync(versionsDir(), { recursive: true });
   const prev = readEntry(key);
@@ -120,7 +123,7 @@ function commitEntry(key: string, content: string, author: string): Provenance {
     author,
     updatedAt: timestamp,
     prev: record.prev,
-    sourceTranscriptIds: prevProv?.sourceTranscriptIds ?? [],
+    sourceTranscriptIds: opts?.sourceTranscriptIds ?? prevProv?.sourceTranscriptIds ?? [],
   };
   writeFileSync(provenancePath(key), JSON.stringify(prov, null, 2));
   return prov;
@@ -179,12 +182,12 @@ interface DreamProposal {
   exampleTranscriptIds: string[];
   /** Memory keys the proposal was drawn from. */
   exampleMemoryKeys: string[];
-  prevalence: { hits: number; scanned: number };
+  prevalence: { hits: number; scanned: number; unit: "memory-files" };
   rationale: string;
 }
 
 /** Build one dream proposal: diff + example IDs + prevalence + rationale. */
-function runDreamPass(topic: string): DreamProposal {
+function runDreamPass(topic: string, opts?: { sessionsScanned?: number }): DreamProposal {
   const steer = readSteer();
   const { scanned, results } = searchEntries(topic, steer.maxProposals);
   const keys = results.map((r) => r.key);
@@ -197,9 +200,12 @@ function runDreamPass(topic: string): DreamProposal {
   const diff = results.length === 0
     ? `# No memories mention "${topic}" yet. Proposed: create \`memory/${safeKey(topic)}.md\`.`
     : `# Promote "${topic}" (${results.length} entries)\n${results.map((r) => `## ${r.key} (${r.hash.slice(0, 12)})\n${r.snippet}\n`).join("\n")}`;
+  const batchNote = opts?.sessionsScanned !== undefined
+    ? ` Transcript batch scanned: ${opts.sessionsScanned} sessions.`
+    : "";
   const rationale = results.length >= steer.minPrevalence
-    ? `"${topic}" recurs across ${results.length}/${scanned} entries, so it earns a durable memory slot.`
-    : `Only ${results.length}/${scanned} entries mention "${topic}"; keep watching before promoting.`;
+    ? `"${topic}" recurs across ${results.length}/${scanned} memory-file hits, so it earns a durable memory slot.${batchNote}`
+    : `Only ${results.length}/${scanned} memory-file hits mention "${topic}"; keep watching before promoting.${batchNote}`;
   const limitation = ids.length === 0
     ? ` Note: no sourceTranscriptIds are recorded in entry provenance yet, so exampleTranscriptIds is empty; exampleMemoryKeys lists the searched keys instead.`
     : "";
@@ -207,7 +213,7 @@ function runDreamPass(topic: string): DreamProposal {
     diff,
     exampleTranscriptIds: ids,
     exampleMemoryKeys: keys,
-    prevalence: { hits: results.length, scanned },
+    prevalence: { hits: results.length, scanned, unit: "memory-files" },
     rationale: rationale + limitation,
   };
 }
@@ -337,11 +343,13 @@ export default Plugin.define({
       });
       editor.add({
         name: "memory_write_cas",
-        description: "CAS memory write: read, draft, re-hash, compare expectedHash, commit or abort.",
+        description: "CAS memory write: read, draft, re-hash, compare expectedHash, commit or abort. Pass expectedHash from memory_read, or force:true to commit without a hash check (recorded with a +force author tag).",
         input: obj({
           key: str("Memory key to write."),
           content: str("Full new content for the entry."),
-          expectedHash: { type: "string", description: "Hash from memory_read; abort if current differs. Omit to force." },
+          expectedHash: { type: "string", description: "Hash from memory_read; abort if current differs. Required unless force:true." },
+          force: { type: "boolean", description: "Skip the CAS hash check and commit unconditionally. Provenance author is tagged +force." },
+          sourceTranscriptIds: { type: "array", items: { type: "string" }, description: "Transcript IDs this content derives from; stored in entry provenance." },
           author: str("Author tag for provenance."),
         }, ["key", "content"]),
         options: { namespace: "memory" },
@@ -349,10 +357,18 @@ export default Plugin.define({
           const key = String(input.key);
           const current = readEntry(key);
           const expected = input.expectedHash ? String(input.expectedHash) : null;
-          if (current && expected && expected !== current.hash) {
+          const force = input.force === true;
+          if (current && !force && !expected) {
+            return { content: `ABORT no expectedHash for existing key=${key} current=${current.hash}. Re-read via memory_read and pass expectedHash, or retry with force:true.` };
+          }
+          if (current && !force && expected && expected !== current.hash) {
             return { content: `ABORT stale write: expected=${expected} current=${current.hash}. Re-read, re-draft, retry.` };
           }
-          const prov = commitEntry(key, String(input.content), String(input.author ?? "agent"));
+          const author = force ? `${String(input.author ?? "agent")}+force` : String(input.author ?? "agent");
+          const sourceTranscriptIds = Array.isArray(input.sourceTranscriptIds)
+            ? input.sourceTranscriptIds.filter((s: unknown): s is string => typeof s === "string")
+            : undefined;
+          const prov = commitEntry(key, String(input.content), author, { sourceTranscriptIds });
           return { content: `COMMIT key=${prov.key} hash=${prov.hash} version=${prov.version} prev=${prov.prev ?? "none"}` };
         },
       });
@@ -375,17 +391,27 @@ export default Plugin.define({
           topic: str("Topic to dream about."),
           steering: str("Optional steering hint recorded with the proposal."),
           minPrevalence: { type: "number", description: "Optional minPrevalence override recorded with the proposal." },
+          sessionIds: { type: "array", items: { type: "string" }, description: "Transcript batch this proposal was drawn from; persisted in the .dreams envelope." },
+          sessionsScanned: { type: "number", description: "Size of the transcript batch scanned; persisted in the envelope and may be referenced in rationale." },
         }, ["topic"]),
         options: { namespace: "dream" },
         execute: async (input: any) => {
           const topic = String(input.topic);
+          const sessionIds = Array.isArray(input.sessionIds)
+            ? input.sessionIds.filter((s: unknown): s is string => typeof s === "string")
+            : null;
+          const sessionsScanned = input.sessionsScanned !== undefined ? Number(input.sessionsScanned) : null;
+          // No auto-write of promoted entries here: proposals are human-gated.
+          // sessionIds/sessionsScanned only describe the transcript batch and are persisted.
           const record = {
             schemaVersion: 1,
             topic,
             timestamp: new Date().toISOString(),
             steering: input.steering !== undefined ? String(input.steering) : null,
             minPrevalence: input.minPrevalence !== undefined ? Number(input.minPrevalence) : null,
-            proposal: runDreamPass(topic),
+            sessionIds,
+            sessionsScanned,
+            proposal: runDreamPass(topic, sessionsScanned !== null && !Number.isNaN(sessionsScanned) ? { sessionsScanned } : undefined),
           };
           const dreamsDir = join(memoryDir(), ".dreams");
           mkdirSync(dreamsDir, { recursive: true });
@@ -430,6 +456,10 @@ export default Plugin.define({
         },
       });
     });
+    // Commands below intentionally mirror commands/*.md (same names).
+    // The markdown files are model-facing instructions auto-discovered by
+    // opencode; the code registrations below are tool-backed execution.
+    // Same names are intentional parity — last-wins is harmless.
     // Note: CommandDefinition.execute must return Promise<void> (see
     // node_modules/@opencode/plugin/dist/promise/command.d.ts), so commands
     // persist their summaries to .dreams/latest-summary.md instead of returning text.

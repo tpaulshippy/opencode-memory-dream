@@ -30,7 +30,7 @@ allocated resources" (transcript §§11, 13).
 
 1. Collect all reviewer findings; cluster duplicates.
 2. Apply the prevalence threshold: promote only patterns in
-   ≥2–3 independent sessions [not from talk — repo threshold]. Log one-offs separately.
+   ≥2–3 independent sessions (repo convention [not from talk]; harness counts memory-file hits — pass sessionsScanned for session-based accounting). Log one-offs separately.
 3. Rank by prevalence × steering alignment.
 4. Emit each proposal in the output contract: diff + example memory keys
    (what `dream_propose` returns — it searches memory, not transcripts)
