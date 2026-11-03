@@ -1,0 +1,18 @@
+{
+  "name": "opencode-memory-dream",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Memory + dream loop plugin for opencode",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/index.ts"
+  },
+  "files": ["src", "skills", "commands", "agents"],
+  "dependencies": {
+    "@opencode/plugin": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

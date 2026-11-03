@@ -1,0 +1,1 @@
+To test locally: in this repo run `npm install`, then load the plugin from this directory in opencode (local plugin path) with MEMORY_DIR optionally pointing at a scratch dir.
